@@ -9,6 +9,6 @@ namespace ApiEcommerce_VS.Models
         public string? Name { get; set; }
         public string UserName { get; set; } = string.Empty;
         public string? Password { get; set; }
-        public string? Rol { get; set; }
+        public string? Role { get; set; }
     }
 }

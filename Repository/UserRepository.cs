@@ -32,9 +32,19 @@ namespace ApiEcommerce_VS.Repository
             throw new NotImplementedException();
         }
 
-        public Task<User> Register(CreateUserDto createUserDto)
+        public async Task<User> Register(CreateUserDto createUserDto)
         {
-            throw new NotImplementedException();
+            var encriptedPassword = BCrypt.Net.BCrypt.HashPassword(createUserDto.Password);
+            var user = new User()
+            {
+                UserName = createUserDto.Username ?? "No Username",
+                Name = createUserDto.Name,
+                Role = createUserDto.Role,
+                Password = encriptedPassword
+            };
+            _db.Users.Add(user);
+            await _db.SaveChangesAsync();
+            return user;
         }
     }
 }
