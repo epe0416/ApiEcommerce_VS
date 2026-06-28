@@ -3,6 +3,10 @@ using ApiEcommerce_VS.Models;
 using ApiEcommerce_VS.Models.Dtos;
 using ApiEcommerce_VS.Repository.IRepository;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.IdentityModel.Tokens;
+using System.IdentityModel.Tokens.Jwt;
+using System.Security.Claims;
+using System.Text;
 
 namespace ApiEcommerce_VS.Repository
 {
@@ -60,6 +64,37 @@ namespace ApiEcommerce_VS.Repository
                     Message = "Las credenciales son incorrectas"
                 };
             }
+            //JWT
+            var handlerToken = new JwtSecurityTokenHandler();
+            if (string.IsNullOrWhiteSpace(secretKey))
+            {
+                throw new InvalidOperationException("SecretKey no esta configurada");
+            }
+            var key = Encoding.UTF8.GetBytes(secretKey);
+            var tokenDescriptor = new SecurityTokenDescriptor
+            {
+                Subject = new ClaimsIdentity(new[]
+                {
+                    new Claim("id", user.Id.ToString()),
+                    new Claim("username", user.UserName),
+                    new Claim(ClaimTypes.Role, user.Role ?? string.Empty),
+                }),
+                Expires = DateTime.UtcNow.AddHours(2),
+                SigningCredentials = new SigningCredentials(new SymmetricSecurityKey(key), SecurityAlgorithms.HmacSha256Signature)
+            };
+            var token = handlerToken.CreateToken(tokenDescriptor);
+            return new UserLoginResponseDto()
+            {
+                Token = handlerToken.WriteToken(token),
+                User = new UserRegisterDto()
+                {
+                    UserName = user.UserName,
+                    Name = user.Name,
+                    Role = user.Role,
+                    Password = user.Password ?? "",
+                },
+                Message = "Usuario logueado correctamente"
+            };
         }
 
         public async Task<User> Register(CreateUserDto createUserDto)
