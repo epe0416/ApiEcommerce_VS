@@ -2,15 +2,18 @@
 using ApiEcommerce_VS.Models;
 using ApiEcommerce_VS.Models.Dtos;
 using ApiEcommerce_VS.Repository.IRepository;
+using Microsoft.EntityFrameworkCore;
 
 namespace ApiEcommerce_VS.Repository
 {
     public class UserRepository : IUserRepository
     {
         public readonly ApplicationDbContext _db;
-        public UserRepository(ApplicationDbContext db)
+        private string? secretKey;
+        public UserRepository(ApplicationDbContext db, IConfiguration configuration)
         {
             _db = db;
+            secretKey = configuration.GetValue<string>("ApiSettings:SecretKey");
         }
         public User? GetUser(int id)
         {
@@ -27,9 +30,36 @@ namespace ApiEcommerce_VS.Repository
             return !_db.Users.Any(u => u.UserName.ToLower().Trim() == username.ToLower().Trim());
         }
 
-        public Task<UserLoginDto> Login(UserLoginDto userLoginDto)
+        public async Task<UserLoginResponseDto> Login(UserLoginDto userLoginDto)
         {
-            throw new NotImplementedException();
+            if (string.IsNullOrEmpty(userLoginDto.Username))
+            {
+                return new UserLoginResponseDto()
+                {
+                    Token = "",
+                    User = null,
+                    Message = "El username es requerido "
+                };
+            }
+            var user = await _db.Users.FirstOrDefaultAsync<User>(u => u.UserName.ToLower().Trim() == userLoginDto.Username.ToLower().Trim());
+            if(user == null)
+            {
+                return new UserLoginResponseDto()
+                {
+                    Token = "",
+                    User = null,
+                    Message = "El username no encontrado"
+                };
+            }
+            if(!BCrypt.Net.BCrypt.Verify(userLoginDto.Password, user.Password))
+            {
+                return new UserLoginResponseDto()
+                {
+                    Token = "",
+                    User = null,
+                    Message = "Las credenciales son incorrectas"
+                };
+            }
         }
 
         public async Task<User> Register(CreateUserDto createUserDto)
