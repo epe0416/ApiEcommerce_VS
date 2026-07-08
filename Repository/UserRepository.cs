@@ -77,7 +77,7 @@ namespace ApiEcommerce_VS.Repository
                 {
                     new Claim("id", user.Id.ToString()),
                     new Claim("username", user.UserName),
-                    new Claim(ClaimTypes.Role, user.Role ?? string.Empty),
+                    new Claim(ClaimTypes.Role, user.Rol ?? string.Empty),
                 }),
                 Expires = DateTime.UtcNow.AddHours(2),
                 SigningCredentials = new SigningCredentials(new SymmetricSecurityKey(key), SecurityAlgorithms.HmacSha256Signature)
@@ -90,7 +90,7 @@ namespace ApiEcommerce_VS.Repository
                 {
                     UserName = user.UserName,
                     Name = user.Name,
-                    Role = user.Role,
+                    Rol = user.Rol,
                     Password = user.Password ?? "",
                 },
                 Message = "Usuario logueado correctamente"
@@ -104,7 +104,7 @@ namespace ApiEcommerce_VS.Repository
             {
                 UserName = createUserDto.Username ?? "No Username",
                 Name = createUserDto.Name,
-                Role = createUserDto.Role,
+                Rol = createUserDto.Role,
                 Password = encriptedPassword
             };
             _db.Users.Add(user);

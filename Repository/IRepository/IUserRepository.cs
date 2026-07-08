@@ -32,7 +32,7 @@ namespace ApiEcommerce_VS.Repository.IRepository
         ICollection<User> GetUsers();
         User? GetUser(int id);
         bool IsUniqueUser(string username);
-        Task<UserLoginDto> Login(UserLoginDto userLoginDto);
+        Task<UserLoginResponseDto> Login(UserLoginDto userLoginDto);
         Task<User> Register(CreateUserDto createUserDto);
     }
 }
