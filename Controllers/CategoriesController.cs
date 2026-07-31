@@ -1,7 +1,10 @@
-﻿using ApiEcommerce_VS.Models;
+﻿using ApiEcommerce_VS.Constants;
+using ApiEcommerce_VS.Models;
 using ApiEcommerce_VS.Models.Dtos;
 using ApiEcommerce_VS.Repository.IRepository;
 using AutoMapper;
+using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Cors;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 
@@ -9,6 +12,7 @@ namespace ApiEcommerce_VS.Controllers
 {
     [Route("api/[controller]")]
     [ApiController]
+    [Authorize]
     public class CategoriesController : ControllerBase
     {
         private readonly ICategoryRepository _categoryRepository;
@@ -23,6 +27,7 @@ namespace ApiEcommerce_VS.Controllers
         [HttpGet]
         [ProducesResponseType(StatusCodes.Status403Forbidden)]
         [ProducesResponseType(StatusCodes.Status200OK)]
+        //[EnableCors("AllowSpecificOrigin")]
         public IActionResult GetCategories()
         {
             var categories = _categoryRepository.GetCategories();

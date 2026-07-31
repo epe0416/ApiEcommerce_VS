@@ -1,7 +1,11 @@
+using ApiEcommerce_VS.Constants;
 using ApiEcommerce_VS.Data;
 using ApiEcommerce_VS.Repository;
 using ApiEcommerce_VS.Repository.IRepository;
+using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.IdentityModel.Tokens;
+using System.Text;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -18,6 +22,28 @@ builder.Services.AddAutoMapper(cfg => {
     cfg.AddMaps(typeof(Program).Assembly);
 
 });
+var secretKey = builder.Configuration.GetValue<string>("ApiSettings:SecretKey");
+if (string.IsNullOrEmpty(secretKey))
+{
+    throw new InvalidOperationException("SecretKey no esta configurada");
+}
+builder.Services.AddAuthentication(options =>
+{
+    options.DefaultAuthenticateScheme = JwtBearerDefaults.AuthenticationScheme;
+    options.DefaultChallengeScheme = JwtBearerDefaults.AuthenticationScheme;
+}).AddJwtBearer(options =>
+{
+    options.RequireHttpsMetadata = false;
+    options.SaveToken = true;
+    options.TokenValidationParameters = new Microsoft.IdentityModel.Tokens.TokenValidationParameters
+    {
+        ValidateIssuerSigningKey = true,
+        IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(secretKey)),
+        ValidateIssuer = false,
+        ValidateAudience = true,
+    };
+});
+
 builder.Services.AddControllers();
 // Learn more about configuring OpenAPI at https://aka.ms/aspnet/openapi
 builder.Services.AddOpenApi();
@@ -45,7 +71,7 @@ if (app.Environment.IsDevelopment())
 
 app.UseHttpsRedirection();
 
-app.UseCors("AllowSpecificOrigin");
+app.UseCors(PolicyNames.AllowSpecificOrigin);
 
 app.UseAuthorization();
 
