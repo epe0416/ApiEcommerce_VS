@@ -36,8 +36,10 @@ namespace ApiEcommerce_VS.Controllers
         [ProducesResponseType(StatusCodes.Status200OK)]
         public IActionResult GetUser(int id)
         {
+            
             var user = _userRepository.GetUser(id);
-            if(user == null)
+            
+            if (user == null)
             {
                 return NotFound($"El usuario con id {id} no existe");
             }
