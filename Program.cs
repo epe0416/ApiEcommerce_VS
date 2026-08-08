@@ -62,14 +62,8 @@ public partial class Program
         // Importante tomar en cuenta que cuando vayamos a utilizar uno de los perfiles lo haremos con el nombre que colocamos
         builder.Services.AddControllers(options =>
         {
-            options.CacheProfiles.Add("Default10", new Microsoft.AspNetCore.Mvc.CacheProfile()
-            {
-                Duration = 10
-            });
-            options.CacheProfiles.Add("Default20", new Microsoft.AspNetCore.Mvc.CacheProfile()
-            {
-                Duration = 20
-            });
+            options.CacheProfiles.Add(CacheProfiles.Default10, CacheProfiles.Profile10);
+            options.CacheProfiles.Add(CacheProfiles.Default20, CacheProfiles.Profile20);
         }
             
         );
