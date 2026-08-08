@@ -20,7 +20,7 @@ public partial class Program
 
         builder.Services.AddResponseCaching(options =>
         {
-            options.MaximumBodySize = 1024;
+            options.MaximumBodySize = 1024 * 1024; // los primeros 1024 hacen referencia a Bites por eso los multiplicamos por 1024 para tener 1 MB de cache
             options.UseCaseSensitivePaths = true;
         });
 
@@ -57,7 +57,22 @@ public partial class Program
             };
         });
 
-        builder.Services.AddControllers();
+        //Configuración de perfiles de Caché
+        // En este caso configuramos 2 perfiles uno a 10 segundos y otro a 20 segundos
+        // Importante tomar en cuenta que cuando vayamos a utilizar uno de los perfiles lo haremos con el nombre que colocamos
+        builder.Services.AddControllers(options =>
+        {
+            options.CacheProfiles.Add("Default10", new Microsoft.AspNetCore.Mvc.CacheProfile()
+            {
+                Duration = 10
+            });
+            options.CacheProfiles.Add("Default20", new Microsoft.AspNetCore.Mvc.CacheProfile()
+            {
+                Duration = 20
+            });
+        }
+            
+        );
         // Learn more about configuring OpenAPI at https://aka.ms/aspnet/openapi
         builder.Services.AddOpenApi();
         builder.Services.AddSwaggerGen(
