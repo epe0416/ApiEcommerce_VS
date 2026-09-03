@@ -105,23 +105,40 @@ public partial class Program
                       Url = new Uri("http://example.com/license")
                   }
               });
-            //  options.AddSecurityRequirement(new OpenApiSecurityRequirement()
-            //    {
-            //      {
-            //        new OpenApiSecurityScheme
-            //        {
-            //          Reference = new OpenApiReference
-            //          {
-            //            Type = ReferenceType.SecurityScheme,
-            //            Id = "Bearer"
-            //          },
-            //          Scheme = "oauth2",
-            //          Name = "Bearer",
-            //          In = ParameterLocation.Header
-            //        },
-            //      new List<string>()
-            //    }
-            //});
+              options.SwaggerDoc("v2", new OpenApiInfo
+              {
+                  Version = "v2",
+                  Title = "API Ecommerce V2",
+                  Description = "API versión 2 para gestionar productos y usuarios",
+                  TermsOfService = new Uri("http://examplev2.com/terms"),
+                  Contact = new OpenApiContact
+                  {
+                      Name = "Devtalles",
+                      Url = new Uri("https://devtalles.com")
+                  },
+                  License = new OpenApiLicense
+                  {
+                      Name = "Licencia de uso",
+                      Url = new Uri("http://examplev2.com/license")
+                  }
+              });
+              //  options.AddSecurityRequirement(new OpenApiSecurityRequirement()
+              //    {
+              //      {
+              //        new OpenApiSecurityScheme
+              //        {
+              //          Reference = new OpenApiReference
+              //          {
+              //            Type = ReferenceType.SecurityScheme,
+              //            Id = "Bearer"
+              //          },
+              //          Scheme = "oauth2",
+              //          Name = "Bearer",
+              //          In = ParameterLocation.Header
+              //        },
+              //      new List<string>()
+              //    }
+              //});
           }
         );
 
@@ -159,6 +176,7 @@ public partial class Program
             app.UseSwaggerUI(options =>
             {
                 options.SwaggerEndpoint("/swagger/v1/swagger.json", "v1");
+                options.SwaggerEndpoint("/swagger/v2/swagger.json", "v2");
             });
         }
 
