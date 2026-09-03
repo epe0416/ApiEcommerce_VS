@@ -88,6 +88,23 @@ public partial class Program
               {
                   [new OpenApiSecuritySchemeReference("Bearer", document)] = new List<String>()
               });
+
+              options.SwaggerDoc("v1", new OpenApiInfo
+              {
+                  Version = "v1",
+                  Title = "API Ecommerce",
+                  Description = "API para gestionar productos y usuarios",
+                  TermsOfService = new Uri("http://example.com/terms"),
+                  Contact = new OpenApiContact{
+                      Name = "Devtalles",
+                      Url = new Uri("https://devtalles.com")
+                  },
+                  License = new OpenApiLicense
+                  {
+                      Name = "Licencia de uso",
+                      Url = new Uri("http://example.com/license")
+                  }
+              });
             //  options.AddSecurityRequirement(new OpenApiSecurityRequirement()
             //    {
             //      {
@@ -113,7 +130,7 @@ public partial class Program
             option.AssumeDefaultVersionWhenUnspecified = true;
             option.DefaultApiVersion = new ApiVersion(1, 0);
             option.ReportApiVersions = true;
-            option.ApiVersionReader = ApiVersionReader.Combine(new QueryStringApiVersionReader("api-version"));
+            // option.ApiVersionReader = ApiVersionReader.Combine(new QueryStringApiVersionReader("api-version"));
         });
 
         apiVersionenBuilder.AddApiExplorer(option =>
@@ -139,7 +156,10 @@ public partial class Program
         {
             app.MapOpenApi();
             app.UseSwagger();
-            app.UseSwaggerUI();
+            app.UseSwaggerUI(options =>
+            {
+                options.SwaggerEndpoint("/swagger/v1/swagger.json", "v1");
+            });
         }
 
         app.UseHttpsRedirection();
