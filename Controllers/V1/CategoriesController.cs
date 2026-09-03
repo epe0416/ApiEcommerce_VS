@@ -30,6 +30,7 @@ namespace ApiEcommerce_VS.Controllers.V1
         [HttpGet]
         [ProducesResponseType(StatusCodes.Status403Forbidden)]
         [ProducesResponseType(StatusCodes.Status200OK)]
+        [Obsolete("Este metodo esta obsoleto. Se debe usar GetCategoriesByUd de la versión 2s")]
         //[EnableCors("AllowSpecificOrigin")]
         public IActionResult GetCategories()
         {
