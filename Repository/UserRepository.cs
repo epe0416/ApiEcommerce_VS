@@ -2,6 +2,8 @@
 using ApiEcommerce_VS.Models;
 using ApiEcommerce_VS.Models.Dtos;
 using ApiEcommerce_VS.Repository.IRepository;
+using AutoMapper;
+using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
 using System.IdentityModel.Tokens.Jwt;
@@ -14,10 +16,18 @@ namespace ApiEcommerce_VS.Repository
     {
         public readonly ApplicationDbContext _db;
         private string? secretKey;
-        public UserRepository(ApplicationDbContext db, IConfiguration configuration)
+        private readonly UserManager<ApplicationUser> _userManager;
+        private readonly RoleManager<IdentityRole> _roleManager;
+        private readonly IMapper _mapper;
+
+
+        public UserRepository(ApplicationDbContext db, IConfiguration configuration, UserManager<ApplicationUser> userManger, RoleManager<IdentityRole> roleManager, IMapper mapper)
         {
             _db = db;
             secretKey = configuration.GetValue<string>("ApiSettings:SecretKey");
+            _userManager = userManger;
+            _roleManager = roleManager;
+            _mapper = mapper;
         }
         public User? GetUser(int id)
         {
@@ -45,7 +55,7 @@ namespace ApiEcommerce_VS.Repository
                     Message = "El username es requerido "
                 };
             }
-            var user = await _db.Users.FirstOrDefaultAsync<User>(u => u.UserName.ToLower().Trim() == userLoginDto.Username.ToLower().Trim());
+            var user = await _db.ApplicationUsers.FirstOrDefaultAsync<ApplicationUser>(u => u.UserName != null && u.UserName.ToLower().Trim() == userLoginDto.Username.ToLower().Trim());
             if(user == null)
             {
                 return new UserLoginResponseDto()
@@ -55,7 +65,17 @@ namespace ApiEcommerce_VS.Repository
                     Message = "El username no encontrado"
                 };
             }
-            if(!BCrypt.Net.BCrypt.Verify(userLoginDto.Password, user.Password))
+            if (userLoginDto.Password == null)
+            {
+                return new UserLoginResponseDto()
+                {
+                    Token = "",
+                    User = null,
+                    Message = "El password es requerido "
+                };
+            }
+            bool isValid = await _userManager.CheckPasswordAsync(user, userLoginDto.Password);
+            if(!isValid)
             {
                 return new UserLoginResponseDto()
                 {
@@ -70,14 +90,15 @@ namespace ApiEcommerce_VS.Repository
             {
                 throw new InvalidOperationException("SecretKey no esta configurada");
             }
+            var roles = await _userManager.GetRolesAsync(user);
             var key = Encoding.UTF8.GetBytes(secretKey);
             var tokenDescriptor = new SecurityTokenDescriptor
             {
                 Subject = new ClaimsIdentity(new[]
                 {
                     new Claim("id", user.Id.ToString()),
-                    new Claim("username", user.UserName),
-                    new Claim(ClaimTypes.Role, user.Rol ?? string.Empty),
+                    new Claim("username", user.UserName ?? string.Empty),
+                    new Claim(ClaimTypes.Role, roles.FirstOrDefault() ?? string.Empty),
                 }),
                 Expires = DateTime.UtcNow.AddHours(2),
                 SigningCredentials = new SigningCredentials(new SymmetricSecurityKey(key), SecurityAlgorithms.HmacSha256Signature)
@@ -86,13 +107,7 @@ namespace ApiEcommerce_VS.Repository
             return new UserLoginResponseDto()
             {
                 Token = handlerToken.WriteToken(token),
-                User = new UserRegisterDto()
-                {
-                    UserName = user.UserName,
-                    Name = user.Name,
-                    Rol = user.Rol,
-                    Password = user.Password ?? "",
-                },
+                User = _mapper.Map<UserDataDto>(user),
                 Message = "Usuario logueado correctamente"
             };
         }
