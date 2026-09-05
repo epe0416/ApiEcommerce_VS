@@ -56,7 +56,7 @@ namespace ApiEcommerce_VS.Repository
                 };
             }
             var user = await _db.ApplicationUsers.FirstOrDefaultAsync<ApplicationUser>(u => u.UserName != null && u.UserName.ToLower().Trim() == userLoginDto.Username.ToLower().Trim());
-            if(user == null)
+            if (user == null)
             {
                 return new UserLoginResponseDto()
                 {
@@ -75,7 +75,7 @@ namespace ApiEcommerce_VS.Repository
                 };
             }
             bool isValid = await _userManager.CheckPasswordAsync(user, userLoginDto.Password);
-            if(!isValid)
+            if (!isValid)
             {
                 return new UserLoginResponseDto()
                 {
@@ -112,19 +112,40 @@ namespace ApiEcommerce_VS.Repository
             };
         }
 
-        public async Task<User> Register(CreateUserDto createUserDto)
+        public async Task<UserDataDto> Register(CreateUserDto createUserDto)
         {
-            var encriptedPassword = BCrypt.Net.BCrypt.HashPassword(createUserDto.Password);
-            var user = new User()
+            if (string.IsNullOrEmpty(createUserDto.Username))
             {
-                UserName = createUserDto.Username ?? "No Username",
-                Name = createUserDto.Name,
-                Rol = createUserDto.Role,
-                Password = encriptedPassword
+                throw new ArgumentNullException("El Username es requerido");
+            }
+            
+            if (createUserDto.Password == null)
+            {
+                throw new ArgumentNullException("El Password es requerido");
+            }
+            var user = new ApplicationUser()
+            {
+                UserName = createUserDto.Username,
+                Email = createUserDto.Username,
+                NormalizedEmail = createUserDto.Username.ToUpper(),
+                name = createUserDto.Name,
             };
-            _db.Users.Add(user);
-            await _db.SaveChangesAsync();
-            return user;
+
+            var result = await _userManager.CreateAsync(user, createUserDto.Password);
+            if (result.Succeeded)
+            {
+                var userRole = createUserDto.Role ?? "User";
+                var roleExist = await _roleManager.RoleExistsAsync(userRole);
+                if (!roleExist)
+                {
+                    var identityRole = new IdentityRole(userRole);
+                    await _roleManager.CreateAsync(identityRole);
+                }
+                await _userManager.AddToRoleAsync(user, userRole);
+                var createdUser = _db.ApplicationUsers.FirstOrDefault(u => u.UserName == createUserDto.Username);
+                return _mapper.Map<UserDataDto>(createdUser);
+            }
+            throw new ApplicationException("No se pudo realizar el registro");
         }
     }
 }
