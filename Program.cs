@@ -1,5 +1,6 @@
 using ApiEcommerce_VS.Constants;
 using ApiEcommerce_VS.Data;
+using ApiEcommerce_VS.Models;
 using ApiEcommerce_VS.Repository;
 using ApiEcommerce_VS.Repository.IRepository;
 using Asp.Versioning;
@@ -38,7 +39,7 @@ public partial class Program
 
         });
 
-        builder.Services.AddIdentity<IdentityUser, IdentityRole>()
+        builder.Services.AddIdentity<ApplicationUser, IdentityRole>()
             .AddEntityFrameworkStores<ApplicationDbContext>()
             .AddDefaultTokenProviders();
 
