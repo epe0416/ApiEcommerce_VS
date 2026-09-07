@@ -187,6 +187,8 @@ public partial class Program
             });
         }
 
+        app.UseStaticFiles();
+
         app.UseHttpsRedirection();
 
         app.UseCors(PolicyNames.AllowSpecificOrigin);
