@@ -1,5 +1,6 @@
 ﻿using ApiEcommerce_VS.Models;
 using ApiEcommerce_VS.Models.Dtos;
+using ApiEcommerce_VS.Models.Dtos.Responses;
 using ApiEcommerce_VS.Repository;
 using ApiEcommerce_VS.Repository.IRepository;
 using Asp.Versioning;
@@ -77,12 +78,12 @@ namespace ApiEcommerce_VS.Controllers
             }
             var products = _productRepository.GetProductsInPages(pageNumber, pageSize);
             var productDto = _mapper.Map<List<ProductDto>>(products);
-            var paginationResponse = new
+            var paginationResponse = new PaginationResponse<ProductDto>
             {
                 PageNumber = pageNumber,
                 PageSize = pageSize,
                 TotalPages = totalPages,
-                Products = productDto
+                Items = productDto
             };
             return Ok(paginationResponse);
         }
