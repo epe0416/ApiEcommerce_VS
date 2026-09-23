@@ -11,6 +11,9 @@ using Microsoft.IdentityModel.Tokens;
 using Microsoft.OpenApi;
 using System.Text;
 
+using Mapster;
+using MapsterMapper;
+
 public partial class Program
 {
     private static void Main(string[] args)
@@ -37,14 +40,20 @@ public partial class Program
         builder.Services.AddScoped<ICategoryRepository, CategoryRepository>();
         builder.Services.AddScoped<IProductRepository, ProductRepository>();
         builder.Services.AddScoped<IUserRepository, UserRepository>();
-        builder.Services.AddAutoMapper(cfg =>
-        {
+        //builder.Services.AddAutoMapper(cfg =>
+        //{
 
-            // cfg.AddProfile<CategoryProfile>();
+        //    // cfg.AddProfile<CategoryProfile>();
 
-            cfg.AddMaps(typeof(Program).Assembly);
+        //    cfg.AddMaps(typeof(Program).Assembly);
 
-        });
+        //});
+
+        var mapsterConfig = TypeAdapterConfig.GlobalSettings;
+        mapsterConfig.Scan(typeof(Program).Assembly); // escanea mappings en este ensamblado
+
+        builder.Services.AddSingleton(mapsterConfig);
+        builder.Services.AddScoped<IMapper, ServiceMapper>();
 
         builder.Services.AddIdentity<ApplicationUser, IdentityRole>()
             .AddEntityFrameworkStores<ApplicationDbContext>()
@@ -55,6 +64,7 @@ public partial class Program
         {
             throw new InvalidOperationException("SecretKey no esta configurada");
         }
+
         builder.Services.AddAuthentication(options =>
         {
             options.DefaultAuthenticateScheme = JwtBearerDefaults.AuthenticationScheme;

@@ -2,7 +2,7 @@
 using ApiEcommerce_VS.Models;
 using ApiEcommerce_VS.Models.Dtos;
 using ApiEcommerce_VS.Repository.IRepository;
-using AutoMapper;
+using Mapster;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
@@ -16,18 +16,18 @@ namespace ApiEcommerce_VS.Repository
     {
         public readonly ApplicationDbContext _db;
         private string? secretKey;
+
         private readonly UserManager<ApplicationUser> _userManager;
         private readonly RoleManager<IdentityRole> _roleManager;
-        private readonly IMapper _mapper;
 
 
-        public UserRepository(ApplicationDbContext db, IConfiguration configuration, UserManager<ApplicationUser> userManger, RoleManager<IdentityRole> roleManager, IMapper mapper)
+        public UserRepository(ApplicationDbContext db, IConfiguration configuration,
+                              UserManager<ApplicationUser> userManager, RoleManager<IdentityRole> roleManager)
         {
             _db = db;
             secretKey = configuration.GetValue<string>("ApiSettings:SecretKey");
-            _userManager = userManger;
+            _userManager = userManager;
             _roleManager = roleManager;
-            _mapper = mapper;
         }
         public ApplicationUser? GetUser(string id)
         {
@@ -52,7 +52,7 @@ namespace ApiEcommerce_VS.Repository
                 {
                     Token = "",
                     User = null,
-                    Message = "El username es requerido "
+                    Message = "El Username es requerido "
                 };
             }
             var user = await _db.ApplicationUsers.FirstOrDefaultAsync<ApplicationUser>(u => u.UserName != null && u.UserName.ToLower().Trim() == userLoginDto.Username.ToLower().Trim());
@@ -62,7 +62,7 @@ namespace ApiEcommerce_VS.Repository
                 {
                     Token = "",
                     User = null,
-                    Message = "El username no encontrado"
+                    Message = "Username no encontrado"
                 };
             }
             if (userLoginDto.Password == null)
@@ -71,7 +71,7 @@ namespace ApiEcommerce_VS.Repository
                 {
                     Token = "",
                     User = null,
-                    Message = "El password es requerido "
+                    Message = "Password requerido"
                 };
             }
             bool isValid = await _userManager.CheckPasswordAsync(user, userLoginDto.Password);
@@ -81,10 +81,10 @@ namespace ApiEcommerce_VS.Repository
                 {
                     Token = "",
                     User = null,
-                    Message = "Las credenciales son incorrectas"
+                    Message = "Credenciales son incorrectas"
                 };
             }
-            //JWT
+            // JWT
             var handlerToken = new JwtSecurityTokenHandler();
             if (string.IsNullOrWhiteSpace(secretKey))
             {
@@ -95,11 +95,12 @@ namespace ApiEcommerce_VS.Repository
             var tokenDescriptor = new SecurityTokenDescriptor
             {
                 Subject = new ClaimsIdentity(new[]
-                {
-                    new Claim("id", user.Id.ToString()),
-                    new Claim("username", user.UserName ?? string.Empty),
-                    new Claim(ClaimTypes.Role, roles.FirstOrDefault() ?? string.Empty),
-                }),
+              {
+        new Claim("id",user.Id.ToString()),
+        new Claim("username",user.UserName ?? string.Empty),
+        new Claim(ClaimTypes.Role, roles.FirstOrDefault() ?? string.Empty),
+      }
+              ),
                 Expires = DateTime.UtcNow.AddHours(2),
                 SigningCredentials = new SigningCredentials(new SymmetricSecurityKey(key), SecurityAlgorithms.HmacSha256Signature)
             };
@@ -107,9 +108,10 @@ namespace ApiEcommerce_VS.Repository
             return new UserLoginResponseDto()
             {
                 Token = handlerToken.WriteToken(token),
-                User = _mapper.Map<UserDataDto>(user),
+                User = user.Adapt<UserDataDto>(),
                 Message = "Usuario logueado correctamente"
             };
+
         }
 
         public async Task<UserDataDto> Register(CreateUserDto createUserDto)
@@ -118,7 +120,6 @@ namespace ApiEcommerce_VS.Repository
             {
                 throw new ArgumentNullException("El Username es requerido");
             }
-            
             if (createUserDto.Password == null)
             {
                 throw new ArgumentNullException("El Password es requerido");
@@ -128,25 +129,24 @@ namespace ApiEcommerce_VS.Repository
                 UserName = createUserDto.Username,
                 Email = createUserDto.Username,
                 NormalizedEmail = createUserDto.Username.ToUpper(),
-                name = createUserDto.Name,
+                name = createUserDto.Name
             };
-
             var result = await _userManager.CreateAsync(user, createUserDto.Password);
             if (result.Succeeded)
             {
                 var userRole = createUserDto.Role ?? "User";
-                var roleExist = await _roleManager.RoleExistsAsync(userRole);
-                if (!roleExist)
+                var roleExists = await _roleManager.RoleExistsAsync(userRole);
+                if (!roleExists)
                 {
                     var identityRole = new IdentityRole(userRole);
                     await _roleManager.CreateAsync(identityRole);
                 }
                 await _userManager.AddToRoleAsync(user, userRole);
                 var createdUser = _db.ApplicationUsers.FirstOrDefault(u => u.UserName == createUserDto.Username);
-                return _mapper.Map<UserDataDto>(createdUser);
+                return createdUser.Adapt<UserDataDto>();
             }
-            var erros = string.Join(", ", result.Errors.Select(e => e.Description));
-            throw new ApplicationException($"No se pudo realizar el registro: {erros}");
+            var errors = string.Join(", ", result.Errors.Select(e => e.Description));
+            throw new ApplicationException($"No se pudo realizar el registro: {errors}");
         }
     }
 }

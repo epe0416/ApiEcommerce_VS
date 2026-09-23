@@ -1,24 +1,23 @@
 ﻿using ApiEcommerce_VS.Models.Dtos;
 using ApiEcommerce_VS.Repository.IRepository;
 using Asp.Versioning;
-using AutoMapper;
+using Mapster;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
-namespace ApiEcommerce_VS.Controllers
+namespace ApiEcommerce.Controllers
 {
-    [Route("api/v{version:apiVersion}/[controller]")]
-    [ApiVersionNeutral]
-    [ApiController]
     [Authorize(Roles = "Admin")]
+    [Route("api/v{version:apiVersion}/[controller]")]
+    [ApiController]
+    [ApiVersionNeutral]
+
     public class UsersController : ControllerBase
     {
         private readonly IUserRepository _userRepository;
-        private readonly IMapper _mapper;
-        public UsersController(IUserRepository userRepository, IMapper mapper)
+        public UsersController(IUserRepository userRepository)
         {
             _userRepository = userRepository;
-            _mapper = mapper;
         }
 
         [HttpGet]
@@ -27,10 +26,10 @@ namespace ApiEcommerce_VS.Controllers
         public IActionResult GetUsers()
         {
             var users = _userRepository.GetUsers();
-            var usersDto = _mapper.Map<List<UserDto>>(users);
-
+            var usersDto = users.Adapt<List<UserDto>>();
             return Ok(usersDto);
         }
+
         [HttpGet("{id}", Name = "GetUser")]
         [ProducesResponseType(StatusCodes.Status403Forbidden)]
         [ProducesResponseType(StatusCodes.Status400BadRequest)]
@@ -38,26 +37,23 @@ namespace ApiEcommerce_VS.Controllers
         [ProducesResponseType(StatusCodes.Status200OK)]
         public IActionResult GetUser(string id)
         {
-            
             var user = _userRepository.GetUser(id);
-            
             if (user == null)
             {
-                return NotFound($"El usuario con id {id} no existe");
+                return NotFound($"El usuario con el id {id} no existe");
             }
-            var userDto = _mapper.Map<UserDto>(user);
+            var userDto = user.Adapt<UserDto>();
             return Ok(userDto);
         }
-
         [AllowAnonymous]
-        [HttpPost (Name = "RegisterUser")]
+        [HttpPost(Name = "RegisterUser")]
         [ProducesResponseType(StatusCodes.Status403Forbidden)]
         [ProducesResponseType(StatusCodes.Status400BadRequest)]
         [ProducesResponseType(StatusCodes.Status201Created)]
         [ProducesResponseType(StatusCodes.Status500InternalServerError)]
         public async Task<IActionResult> RegisterUser([FromBody] CreateUserDto createUserDto)
         {
-            if(createUserDto == null || !ModelState.IsValid)
+            if (createUserDto == null || !ModelState.IsValid)
             {
                 return BadRequest(ModelState);
             }
@@ -70,7 +66,7 @@ namespace ApiEcommerce_VS.Controllers
                 return BadRequest("El usuario ya existe");
             }
             var result = await _userRepository.Register(createUserDto);
-            if(result == null)
+            if (result == null)
             {
                 return StatusCode(StatusCodes.Status500InternalServerError, "Error al registrar el usuario");
             }
@@ -89,7 +85,6 @@ namespace ApiEcommerce_VS.Controllers
             {
                 return BadRequest(ModelState);
             }
-            
             var user = await _userRepository.Login(userLoginDto);
             if (user == null)
             {
@@ -97,5 +92,6 @@ namespace ApiEcommerce_VS.Controllers
             }
             return Ok(user);
         }
+
     }
 }

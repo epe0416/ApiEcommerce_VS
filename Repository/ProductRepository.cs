@@ -14,12 +14,12 @@ namespace ApiEcommerce_VS.Repository
         }
         public bool BuyProduct(string name, int quantity)
         {
-            if(string.IsNullOrWhiteSpace(name) || quantity <= 0)
+            if (string.IsNullOrWhiteSpace(name) || quantity <= 0)
             {
                 return false;
             }
             var product = _db.Products.FirstOrDefault(p => p.Name.ToLower().Trim() == name.ToLower().Trim());
-            if(product == null || product.Stock < quantity)
+            if (product == null || product.Stock < quantity)
             {
                 return false;
             }
@@ -30,7 +30,7 @@ namespace ApiEcommerce_VS.Repository
 
         public bool CreateProduct(Product product)
         {
-            if(product == null)
+            if (product == null)
             {
                 return false;
             }
@@ -52,7 +52,7 @@ namespace ApiEcommerce_VS.Repository
 
         public Product? GetProduct(int id)
         {
-            if(id <= 0)
+            if (id <= 0)
             {
                 return null;
             }
@@ -66,7 +66,7 @@ namespace ApiEcommerce_VS.Repository
 
         public ICollection<Product> GetProductsForCategory(int categoryId)
         {
-            if(categoryId <= 0)
+            if (categoryId <= 0)
             {
                 return new List<Product>();
             }
@@ -113,16 +113,16 @@ namespace ApiEcommerce_VS.Repository
             var searchTermLowered = searchTerm.ToLower().Trim();
             if (!string.IsNullOrEmpty(searchTerm))
             {
-                query = query.Include(p=> p.Category).Where(
-                    p => p.Name.ToLower().Trim().Contains(searchTermLowered) ||
-                    p.Description.ToLower().Trim().Contains(searchTermLowered));
+                query = query.Include(p => p.Category).Where(
+                  p => p.Name.ToLower().Trim().Contains(searchTermLowered) ||
+                  p.Description.ToLower().Trim().Contains(searchTermLowered));
             }
             return query.OrderBy(p => p.Name).ToList();
         }
 
         public bool UpdateProduct(Product product)
         {
-            if(product== null)
+            if (product == null)
             {
                 return false;
             }
